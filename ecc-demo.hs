@@ -10,6 +10,16 @@ b = 10
 
 mod_p = 127 -- Das Modul für unseren begrenzten Körper F_p, Primzahl
 
+
+-- Punkt auf Kurve in R mit gegbenem x finden
+pointOnCurveInR :: Float -> Point
+pointOnCurveInR x = (x, sqrt(x**3+a*x+b))
+
+-- Im Grunde das Gleiche nur mit Beachtung des Moduls
+pointOnCurveInF :: Float -> Point
+pointOnCurveInF x = let x_ = x `fmod` mod_p in (x_, sqrt(x_**3+a*x_+b) `fmod` mod_p)
+
+
 -- Addition von Punkten auf der elliptischen Kurve in R
 addInR :: Point -> Point -> Point
 addInR p@(x_p, y_p) q@(x_q, y_q)
@@ -69,6 +79,4 @@ naiveMultiplyInF i p = (multiplesOfInF p)!!(i+1)
 -- Hilfsfunktion für mod mit Floats
 
 fmod :: Float -> Int -> Float
-fmod a b = let
-  (n, f) = properFraction(a)
-  in fromIntegral (mod n b) + f
+fmod a b = let (n, f) = properFraction(a) in fromIntegral (mod n b) + f

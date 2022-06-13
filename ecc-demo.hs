@@ -11,7 +11,7 @@ b = 10
 mod_p = 127 -- Das Modul für unseren begrenzten Körper F_p, Primzahl
 
 
--- Punkt auf Kurve in R mit gegbenem x finden
+-- Positiven Punkt auf Kurve in R mit gegbenem x finden
 pointOnCurveInR :: Float -> Point
 pointOnCurveInR x = (x, sqrt(x**3+a*x+b))
 

@@ -27,7 +27,7 @@ addInR p@(x_p, y_p) q@(x_q, y_q)
           y_r = m * (x_q-x_r) - y_q
       in (x_r, y_r)
 
--- Addition von Punkten auf der elliptischen Kurve in Z_p
+-- Addition von Punkten auf der elliptischen Kurve in F_p
 addInF :: Point -> Point -> Point
 addInF p@(x_p, y_p) q@(x_q, y_q)
   | p == o = q -- Reminder: o ist das neutrale Element

@@ -54,8 +54,13 @@ multiplesOfInF :: Point -> [Point]
 multiplesOfInF p = multiplesOfHelper p where multiplesOfHelper buf = buf : multiplesOfHelper (addInF buf p)
 
 
+-- Ineffiziente Multiplikation in R
+naiveMultiplyInR :: Int -> Point -> Point
+naiveMultiplyInR i p = (multiplesOfInR p)!!(i+1)
 
-
+-- Ineffiziente Multiplikation in F_p
+naiveMultiplyInF :: Int -> Point -> Point
+naiveMultiplyInF i p = (multiplesOfInF p)!!(i+1)
 
 
 

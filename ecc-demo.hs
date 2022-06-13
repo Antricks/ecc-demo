@@ -49,7 +49,7 @@ addInF p@(x_p, y_p) q@(x_q, y_q)
 multiplesOfInR :: Point -> [Point]
 multiplesOfInR p = multiplesOfHelper p where multiplesOfHelper buf = buf : multiplesOfHelper (addInR buf p)
 
--- Reihe der Vielfachen von p in Z_p
+-- Reihe der Vielfachen von p in F_p
 multiplesOfInF :: Point -> [Point]
 multiplesOfInF p = multiplesOfHelper p where multiplesOfHelper buf = buf : multiplesOfHelper (addInF buf p)
 

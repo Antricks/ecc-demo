@@ -1,82 +1,60 @@
-type Point = (Float, Float)
+type Point = (Double, Double)
 
 o :: Point
-o = (1/0, 1/0) -- 1/0 ist hier als `Infinity` definiert, da wir mit Floating-Point Zahlen arbeiten.
-               -- Aber das ist ein Thema für wann anders. 
+o = (1 / 0, 1 / 0) -- 1/0 ist hier als `Infinity` definiert, da wir mit floating-Point Zahlen arbeiten.
+               -- Aber das ist ein Thema für wann anders.
 
 -- Kurvenparameter: y^2 = x^3 + a*x + b
-a = -7
-b = 10
+a = 2
 
-mod_p = 127 -- Das Modul für unseren begrenzten Körper F_p, Primzahl
+b = 3
 
+mod_p = 97 -- Das Modul für unseren begrenzten Körper F_p, Primzahl
 
 -- Positiven Punkt auf Kurve in R mit gegbenem x finden
-pointOnCurveInR :: Float -> Point
-pointOnCurveInR x = (x, sqrt(x**3+a*x+b))
-
--- Im Grunde das Gleiche nur mit Beachtung des Moduls
-pointOnCurveInF :: Float -> Point
-pointOnCurveInF x = let x_ = x `fmod` mod_p in (x_, sqrt(x_**3+a*x_+b) `fmod` mod_p)
-
+pointOnCurve :: Double -> Point
+pointOnCurve x = (x, sqrt (x ** 3 + a * x + b))
 
 -- Addition von Punkten auf der elliptischen Kurve in R
-addInR :: Point -> Point -> Point
-addInR p@(x_p, y_p) q@(x_q, y_q)
+add :: Point -> Point -> Point
+add p@(x_p, y_p) q@(x_q, y_q)
   | p == o = q -- Reminder: o ist das neutrale Element
   | q == o = p
   | x_p == x_q && y_p == -y_q = o -- Hier haben wir symmetrische Punkte, also p + (-p) = p-p = o
-  | x_p == x_q && y_p == y_q = -- Bei identischen Punkten müssen wir auf die Bestimmung der Tangentensteigung durch Ableiten zurückgreifen.
-      let m = ((3*x_p*x_p + a) * x_p ) / (2 * y_p)
-          x_r = m*m - 2*x_p
-          y_r = m * (x_p - x_r) - y_p
-      in (x_r, y_r)
-  | otherwise = -- Bei zwei verschiedenen, nicht symmetrischen Punkten ist die Steigung einfach zu berechnen.
-      let m = (y_q - y_p) / (x_q - x_p)
-          x_r = m*m - x_p - x_q
-          y_r = m * (x_q-x_r) - y_q
-      in (x_r, y_r)
-
--- Addition von Punkten auf der elliptischen Kurve in F_p
-addInF :: Point -> Point -> Point
-addInF p@(x_p, y_p) q@(x_q, y_q)
-  | p == o = q -- Reminder: o ist das neutrale Element
-  | q == o = p
-  | x_p == x_q && y_p == -y_q = o -- Hier haben wir symmetrische Punkte, also p + (-p) = p-p = o
-  | x_p == x_q && y_p == y_q = -- Bei identischen Punkten müssen wir auf die Bestimmung der Tangentensteigung durch Ableiten zurückgreifen.
-      let m = (((3*x_p*x_p + a) * x_p ) / (2 * y_p)) `fmod` mod_p
-          x_r = (m*m - 2*x_p) `fmod` mod_p
-          y_r = (m * (x_p - x_r) - y_p) `fmod` mod_p
-      in (x_r, y_r)
-  | otherwise = -- Bei zwei verschiedenen, nicht symmetrischen Punkten ist die Steigung einfach zu berechnen.
-      let m = ((y_q - y_p) / (x_q - x_p)) `fmod` mod_p
-          x_r = (m*m - x_p - x_q) `fmod` mod_p
-          y_r = (m * (x_q-x_r) - y_q) `fmod` mod_p
-      in (x_r, y_r)
-
+  | otherwise = (x_r, y_r)
+  where
+    x_r = m * m - x_p - x_q
+    y_r = -y_p - m * (x_r - x_p)
+    m
+      | p == q = (3 * x_p ** 2 + a) / (2 * y_p) -- Bei identischen Punkten müssen wir auf die Bestimmung der Tangentensteigung durch Ableiten zurückgreifen.
+      | otherwise = (y_q - y_p) / (x_q - x_p) -- Bei zwei verschiedenen, nicht symmetrischen Punkten ist die Steigung einfach zu berechnen.
 
 -- Reihe der Vielfachen von p in R
-multiplesOfInR :: Point -> [Point]
-multiplesOfInR p = multiplesOfHelper p where multiplesOfHelper buf = buf : multiplesOfHelper (addInR buf p)
-
--- Reihe der Vielfachen von p in F_p
-multiplesOfInF :: Point -> [Point]
-multiplesOfInF p = multiplesOfHelper p where multiplesOfHelper buf = buf : multiplesOfHelper (addInF buf p)
-
+multiplesOf :: Point -> [Point]
+multiplesOf p = multiplesOfHelper p
+  where
+    multiplesOfHelper buf = buf : multiplesOfHelper (add buf p)
 
 -- Ineffiziente Multiplikation in R
-naiveMultiplyInR :: Int -> Point -> Point
-naiveMultiplyInR i p = (multiplesOfInR p)!!(i+1)
+naiveMultiply :: Int -> Point -> Point
+naiveMultiply n p = (multiplesOf p) !! (n - 1)
 
--- Ineffiziente Multiplikation in F_p
-naiveMultiplyInF :: Int -> Point -> Point
-naiveMultiplyInF i p = (multiplesOfInF p)!!(i+1)
+-- Effizientere Multiplikation in R
+multiply :: Int -> Point -> Point
+multiply n p =
+  let (_, result) = multiply_ 0 p
+   in result
+  where
+    multiply_ i p_i
+      | 2 ^ (i + 1) > n = (n - 2 ^ i, p_i)
+      | 2 ^ i > left = (left, buf)
+      | 2 ^ i <= left = (left - 2 ^ i, add p_i buf)
+      where
+        (left, buf) = multiply_ (i + 1) (add p_i p_i)
 
-
-
-
-
--- Hilfsfunktion für mod mit Floats
-
-fmod :: Float -> Int -> Float
-fmod a b = let (n, f) = properFraction(a) in fromIntegral (mod n b) + f
+-- Hilfsfunktion für mod mit Doubles
+fmod :: Double -> Int -> Double
+fmod a b
+    | f < 0 && n `mod` b == 0 = fromIntegral(b)+f
+    | otherwise = fromIntegral (n `mod` b) + f
+    where (n, f) = properFraction (a) 
